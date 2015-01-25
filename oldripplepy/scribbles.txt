@@ -1,0 +1,26 @@
+Brief examples on how to use ripplepy to search on disk for ledger information.
+>>> import ripplepy
+>>> db = ripplepy.RipDb('/home/mtravis/tmp/db')
+>>> res = db.whole_ledger(8640200)
+
+>>> import ripplepy
+>>> db = ripplepy.RipDb('/home/mtravis/tmp/db')
+>>> node_hash = db.get_hash(8640200)
+>>> node = db.get_node(node_hash)
+>>> record = ripplepy.PersistentNode(node)
+>>> return_dict = dict()
+>>> lm = record.ledger_master()
+>>> foo = db.walker(lm['TransHash'], list(), 0, return_dict)
+
+import ripplepy
+db = ripplepy.RipDb('/home/mtravis/tmp/db')
+hash = db.get_hash(8640200)
+node = db.get_node(hash)
+record = ripplepy.PersistentNode(node)
+
+# transaction record
+trans = ripplepy.PersistentNode(db.get_node(record._record[3]))
+# account
+account = ripplepy.PersistentNode(db.get_node(record._record[4]))
+
+

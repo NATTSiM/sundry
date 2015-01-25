@@ -1,0 +1,132 @@
+bulk import process to historydb:
+
+rippled@DB1:~/projects/ripplepy$ time ./import3.py -o /space/historydb/input     
+real    696m47.767s
+user    294m46.869s
+sys     86m18.822s
+
+rippled@DB1:~$ ls -l /space/historydb/input
+total 142931660
+-rw-rw-r-- 1 rippled rippled  21719518707 Nov  2 20:40 account_transactions
+-rw-rw-r-- 1 rippled rippled   3018178221 Nov  2 09:16 ledgers
+-rw-rw-r-- 1 rippled rippled 121624277970 Nov  2 13:28 transactions
+
+rippled@DB1:~$ time wc /space/historydb/input/*
+   118152006    827064042  21719518707 /space/historydb/input/account_transactions
+     9676965     77415720   3018178221 /space/historydb/input/ledgers
+    57366648    631033128 121624277970 /space/historydb/input/transactions
+   185195619   1535512890 146361974898 total
+
+real	39m7.196s
+user	38m10.767s
+sys	0m54.641s
+
+indices:
+There are 3 shell scripts to create the necessary indices, which are as
+follows:
+
+ledgers:
+ledger_hash	pkey
+	ALTER TABLE ledgers ADD PRIMARY KEY (ledger_hash);
+ledger_index	DESC
+	CREATE INDEX ON ledgers (ledger_index DESC);
+parent_hash
+	CREATE INDEX ON ledgers (parent_hash);
+
+rippled@DB1:/space/historydb/input$ time psql -c "ALTER TABLE ledgers ADD PRIMARY KEY (ledger_hash);" rippled_history
+ALTER TABLE
+
+real    0m29.748s
+user    0m0.002s
+sys     0m0.003s
+
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON ledgers (ledger_index DESC);" rippled_history
+CREATE INDEX
+
+real    0m13.140s
+user    0m0.002s
+sys     0m0.003s
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON ledgers (parent_hash);" rippled_history
+CREATE INDEX
+
+real    0m29.357s
+user    0m0.002s
+sys     0m0.002s
+
+account_transactions:
+
+CREATE INDEX ON account_transactions (account, ledger_index DESC, tx_seq DESC);
+CREATE INDEX ON account_transactions (tx_result);
+CREATE INDEX ON account_transactions (tx_type);
+CREATE INDEX ON account_transactions (executed_time DESC);
+ALTER TABLE account_transactions ADD PRIMARY KEY (tx_hash, account);
+
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON account_transactions (account, ledger_index DESC, tx_seq DESC);" rippled_history
+CREATE INDEX
+
+real    12m18.836s
+user    0m0.002s
+sys     0m0.002s
+
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON account_transactions (tx_result);" rippled_history
+CREATE INDEX
+
+real    4m2.899s
+user    0m0.002s
+sys     0m0.003s
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON account_transactions (tx_type);" rippled_history
+CREATE INDEX
+
+real    4m39.796s
+user    0m0.002s
+sys     0m0.002s
+rippled@DB1:/space/historydb/input$ time psql -c "CREATE INDEX ON account_transactions (executed_time DESC);" rippled_history
+CREATE INDEX
+
+real    4m16.052s
+user    0m0.001s
+sys     0m0.002s
+
+rippled@DB1:/space/historydb/input$ time psql -c "ALTER TABLE account_transactions ADD PRIMARY KEY (tx_hash, account);" rippled_history
+ALTER TABLE
+
+real    5m49.620s
+user    0m0.001s
+sys     0m0.002s
+
+transactions:
+ALTER TABLE transactions ADD PRIMARY KEY (tx_hash);
+CREATE INDEX ON transactions (ledger_hash);
+CREATE INDEX ON transactions (ledger_index DESC, tx_seq DESC);
+CREATE INDEX ON transactions (executed_time DESC);
+CREATE INDEX ON transactions (tx_result);
+CREATE INDEX ON transactions (tx_type);
+CREATE INDEX ON transactions (account, account_seq DESC);
+
+................
+
+rippled_history=# select max(ledger_index) from ledgers;
+   max   
+---------
+ 9709534
+(1 row)
+
+rippled_history=# select min(ledger_index) from ledgers;
+  min  
+-------
+ 32570
+(1 row)
+
+rippled_history=# select count(*) from ledgers;
+  count  
+---------
+ 9676965
+(1 row)
+
+The totals add up:
+9709534 - 32569 = 9676954
+
+.......................
+
+indices.sh does the indices for transactions table
+

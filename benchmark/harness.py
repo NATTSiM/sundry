@@ -15,4 +15,42 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import ripplepy
+import argparse
+import threading
+import sys
 
+# Benchmark phases
+# 1. prepare test, such as load initial data to randomize
+# 2. launch workers
+# 3. synchronize time
+# 4. start
+
+def worker(instance, scheduler_state):
+    output = str(instance) + ' ' + str(conf.workers) + ' ' + str(scheduler_state.second_to_plan) + '\n'
+    scheduler_state.lock.acquire()
+    sys.stdout.write(output)
+    scheduler_state.lock.release()
+#    sys.stdout.write(output)
+
+#def pause():
+
+class SchedulerState:
+    def __init__(self):
+        self.second_to_plan = 42
+        self.lock = threading.Lock()
+
+
+# main
+argparser = argparse.ArgumentParser()
+argparser.add_argument('-t', '--test', type=str, required=True)
+argparser.add_argument('-c', '--conf', type=str, required=True)
+args = argparser.parse_args()
+
+test = __import__(args.test)
+conf = __import__(args.conf)
+
+scheduler_state = SchedulerState()
+
+for t in (range(1, conf.workers+1)):
+    w = threading.Thread(target=worker, args=(t, scheduler_state), daemon=True)
+    w.start()
