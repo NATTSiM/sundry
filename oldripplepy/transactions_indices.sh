@@ -9,17 +9,17 @@ six="CREATE INDEX ON transactions (tx_type);"
 seven="CREATE INDEX ON transactions (account, account_seq DESC);"
 
 echo $one
-time psql -c "$one" rippled_history
+time psql -U rippled -c "$one" rippled_history
 echo $two
-time psql -c "$two" rippled_history
+time psql -U rippled -c "$two" rippled_history
 echo $three
-time psql -c "$three" rippled_history
+time psql -U rippled -c "$three" rippled_history
 echo $four
-time psql -c "$four" rippled_history
+time psql -U rippled -c "$four" rippled_history
 echo $five
-time psql -c "$five" rippled_history
+time psql -U rippled -c "$five" rippled_history
 echo $six
-time psql -c "$six" rippled_history
+time psql -U rippled -c "$six" rippled_history
 echo $seven
-time psql -c "$seven" rippled_history
+time psql -U rippled -c "$seven" rippled_history
 

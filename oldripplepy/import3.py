@@ -74,16 +74,16 @@ argparser.add_argument('-s', '--start-ledger', type=int, required=False)
 argparser.add_argument('-e', '--end-ledger', type=int, required=False)
 args = argparser.parse_args()
 
-ripdb = ripplepy.RipDb('/space/historydb/sqlite/', nodestore=None)
+ripdb = ripplepy.RipDb('/data/tmp/sqlite/', nodestore=None)
 
-#lcur = ripdb._ledgerdb.cursor()
-#ledgersfile = open(os.path.join(args.output_dir, 'ledgers'), 'w')
-#for row in lcur.execute('SELECT LedgerHash, LedgerSeq, PrevHash, TotalCoins, ClosingTime, CloseTimeRes, AccountSetHash, TransSetHash FROM LEDGERS;'):
-#    ledgersfile.write('\t'.join( (hexToPgHex(row[0]), str(row[1]),
-#        hexToPgHex(row[2]), str(row[3]), str(toUnixTime(row[4])),
-#        str(row[5]), hexToPgHex(row[6]), hexToPgHex(row[7])) ) + '\n')
-#ledgersfile.close()
-#lcur.close()
+lcur = ripdb._ledgerdb.cursor()
+ledgersfile = open(os.path.join(args.output_dir, 'ledgers'), 'w')
+for row in lcur.execute('SELECT LedgerHash, LedgerSeq, PrevHash, TotalCoins, ClosingTime, CloseTimeRes, AccountSetHash, TransSetHash FROM LEDGERS;'):
+    ledgersfile.write('\t'.join( (hexToPgHex(row[0]), str(row[1]),
+        hexToPgHex(row[2]), str(row[3]), str(toUnixTime(row[4])),
+        str(row[5]), hexToPgHex(row[6]), hexToPgHex(row[7])) ) + '\n')
+ledgersfile.close()
+lcur.close()
 
 tcur = ripdb._transactiondb.cursor()
 lcur = ripdb._ledgerdb.cursor()
@@ -122,37 +122,37 @@ transactionsfile.close()
 tcur.close()
 lcur.close()
 
-#prev_tx_hash = str()
-#executed_time = int()
-#tx_result = str()
-#tx_type = str()
-## if tx_hash is different, do queries for executed_time, tx_result, tx_type
-## executed_time: ledgers, tx_result & tx_type: transactions
+prev_tx_hash = str()
+executed_time = int()
+tx_result = str()
+tx_type = str()
+# if tx_hash is different, do queries for executed_time, tx_result, tx_type
+# executed_time: ledgers, tx_result & tx_type: transactions
 
-#acur = ripdb._transactiondb.cursor()
-#lcur = ripdb._ledgerdb.cursor()
-#tcur = ripdb._transactiondb.cursor()
-#accounttransactionsfile = open(os.path.join(args.output_dir, 'account_transactions'), 'w')
-#for row in acur.execute('SELECT Account, TransID, LedgerSeq, TxnSeq FROM AccountTransactions ORDER BY TransID DESC;'):
-#    account = row[0]
-#    tx_hash = row[1]
-#    ledger_index = row[2]
-#    tx_seq = row[3]
-#    if tx_hash != prev_tx_hash:
-#        for lrow in lcur.execute('SELECT ClosingTime FROM Ledgers WHERE LedgerSeq = ?;', (ledger_index,)):
-#            executed_time = lrow[0]
-#
-#        for trow in tcur.execute('SELECT TransType, TxnMeta FROM Transactions WHERE TransID = ?', (tx_hash,)):
-#            tx_type = trow[0]
-#            tx_result = transactionResult(trow[1])
-#
-#        prev_tx_hash = tx_hash
-#
-#    accounttransactionsfile.write('\t'.join( (toPgHex(account),
-#        hexToPgHex(tx_hash), str(ledger_index), str(tx_seq),
-#        str(toUnixTime(executed_time)), tx_result, tx_type) ) + '\n')
-#accounttransactionsfile.close()
-#acur.close()
-#tcur.close()
-#lcur.close()
+acur = ripdb._transactiondb.cursor()
+lcur = ripdb._ledgerdb.cursor()
+tcur = ripdb._transactiondb.cursor()
+accounttransactionsfile = open(os.path.join(args.output_dir, 'account_transactions'), 'w')
+for row in acur.execute('SELECT Account, TransID, LedgerSeq, TxnSeq FROM AccountTransactions ORDER BY TransID DESC;'):
+    account = row[0]
+    tx_hash = row[1]
+    ledger_index = row[2]
+    tx_seq = row[3]
+    if tx_hash != prev_tx_hash:
+        for lrow in lcur.execute('SELECT ClosingTime FROM Ledgers WHERE LedgerSeq = ?;', (ledger_index,)):
+            executed_time = lrow[0]
+
+        for trow in tcur.execute('SELECT TransType, TxnMeta FROM Transactions WHERE TransID = ?', (tx_hash,)):
+            tx_type = trow[0]
+            tx_result = transactionResult(trow[1])
+
+        prev_tx_hash = tx_hash
+
+    accounttransactionsfile.write('\t'.join( (toPgHex(account),
+        hexToPgHex(tx_hash), str(ledger_index), str(tx_seq),
+        str(toUnixTime(executed_time)), tx_result, tx_type) ) + '\n')
+accounttransactionsfile.close()
+acur.close()
+tcur.close()
+lcur.close()
 

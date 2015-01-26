@@ -7,13 +7,13 @@ four="CREATE INDEX ON account_transactions (executed_time DESC);"
 five="ALTER TABLE account_transactions ADD PRIMARY KEY (tx_hash, account);"
 
 echo $one
-time psql -c "$one" rippled_history
+time psql -U rippled -c "$one" rippled_history
 echo $two
-time psql -c "$two" rippled_history
+time psql -U rippled -c "$two" rippled_history
 echo $three
-time psql -c "$three" rippled_history
+time psql -U rippled -c "$three" rippled_history
 echo $four
-time psql -c "$four" rippled_history
+time psql -U rippled -c "$four" rippled_history
 echo $five
-time psql -c "$five" rippled_history
+time psql -U rippled -c "$five" rippled_history
 
