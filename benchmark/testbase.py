@@ -14,18 +14,17 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# noop test for benchmark
+# Base class for benchmark tests.
 
-import testbase
-
-class Prepare(PrepareBase, params=None):
-    def __init__(self):
-        super().__init__(args)
+class PrepareBase:
+    def __init__(self, params=None):
+        pass
 
 
-class Test(TestBase):
-    def __init__(self, q):
-        super().__init__(q)
+class TestBase:
+    def __init__(self, q, hosts=None):
+        _q = q
+        _hosts = hosts
 
-    def send(self):
-        super().send()
+    def send(self, data=None):
+        return 0

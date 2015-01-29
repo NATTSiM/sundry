@@ -18,6 +18,8 @@ import ripplepy
 import argparse
 import threading
 import sys
+import queue
+import csv
 
 # Benchmark phases
 # 1. prepare test, such as load initial data to randomize
@@ -25,19 +27,35 @@ import sys
 # 3. synchronize time
 # 4. start
 
-def worker(instance, scheduler_state):
-    output = str(instance) + ' ' + str(conf.workers) + ' ' + str(scheduler_state.second_to_plan) + '\n'
-    scheduler_state.lock.acquire()
-    sys.stdout.write(output)
-    scheduler_state.lock.release()
-#    sys.stdout.write(output)
+def worker(instance, test, scheduler_state, hosts):
+    while True:
+        pause()
 
-#def pause():
+        scheduler_state._started_lock.acquire()
+        scheduler_state._started += 1
+        scheduler_state._started_lock.release()
+
+        test.send()
+
+        scheduler_state._finished_lock.acquire()
+        scheduler_state._finished += 1
+        scheduler_state._finished_lock.release()
+
+def pause():
+    pass
 
 class SchedulerState:
+    _started = 0
+    _finished = 0
     def __init__(self):
-        self.second_to_plan = 42
-        self.lock = threading.Lock()
+        self._started_lock = threading.Lock()
+        self._finished_lock = threading.Lock()
+
+def logger(q, logfile):
+    outfile = open(logfile, 'a', 1)
+    while True:
+        msg = q.get()
+        outfile.write(str(msg) + '\n')
 
 
 # main
@@ -51,6 +69,18 @@ conf = __import__(args.conf)
 
 scheduler_state = SchedulerState()
 
+# prepare phase, have the params
+preparation = test.Prepare()
+q = queue.Queue()
+qt = threading.Thread(target=logger, args=(q,), daemon=True)
+
 for t in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(t, scheduler_state), daemon=True)
+    w = threading.Thread(target=worker, args=(t, test.Test(q, conf.logfile),
+                                              scheduler_state, conf.hosts),
+                         daemon=True)
     w.start()
+
+outfile = open(conf.summaryfile, 'a', 1)
+while True:
+    # write to csv sent, inflight, etc
+    pass
