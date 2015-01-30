@@ -21,6 +21,7 @@ import sys
 import queue
 import csv
 import time
+import random
 
 # Benchmark phases
 # 1. prepare test, such as load initial data to randomize
@@ -49,7 +50,7 @@ def worker(test, scheduler_state, rate, under_threshold,
         scheduler_state._finished_lock.acquire()
         scheduler_state._finished += 1
         scheduler_state._duration += duration
-        scheduler_state._statuses[status] += 1
+        scheduler_state._status[status] += 1
         if under_threshold is not None and duration < under_threshold:
             scheduler_state._under_threshold += 1
         if over_threshold is not None and duration > over_threshold:
@@ -82,7 +83,7 @@ class SchedulerState:
     _bucket_entries = 0
 
     def __init__(self, statuses=1):
-        _status = [0] * statuses
+        self._status = [0] * statuses
         self._started_lock = threading.Lock()
         self._finished_lock = threading.Lock()
         self._bucket_lock = threading.Lock()
@@ -91,7 +92,7 @@ def logger(q, log_file):
     outfile = open(log_file, 'a', 1, newline='')
     outwriter = csv.writer(outfile, delimiter='\t', lineterminator='\n')
     while True:
-        outwriter.writerow([q.get()])
+        outwriter.writerow(q.get())
 
 
 # main
@@ -108,7 +109,11 @@ scheduler_state = SchedulerState(test.statuses)
 # prepare phase, have the params
 preparation = test.Prepare()
 q = queue.Queue()
-qt = threading.Thread(target=logger, args=(q,), daemon=True)
+qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
+qt.start()
+
+if conf.stack_size is not None:
+    threading.stack_size(conf.stack_size * 1024)
 
 for i in (range(1, conf.workers+1)):
     w = threading.Thread(target=worker, args=(test.Test(i, q, conf.hosts),
@@ -135,5 +140,6 @@ while True:
                         scheduler_state._under_threshold,
                         scheduler_state._over_threshold,
                         '|',
-                        scheduler_state._statuses])
+                        scheduler_state._status])
     time.sleep(conf.summary_interval)
+

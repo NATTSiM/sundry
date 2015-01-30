@@ -25,12 +25,13 @@ class PrepareBase:
 
 class TestBase:
     def __init__(self, instance, q, hosts=None):
-        _instance = instance
-        _q = q
-        _hosts = hosts
+        self._instance = instance
+        self._q = q
+        self._hosts = hosts
 
     def send(self, data=None):
         return 0
 
     def log(self, message):
-        self._q.put([time.asctime(time.localtime(), self._instance])
+        self._q.put([time.asctime(time.localtime()), self._instance, message])
+
