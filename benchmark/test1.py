@@ -18,14 +18,21 @@
 
 import testbase
 
+statuses = 1
+
 class Prepare(PrepareBase, params=None):
     def __init__(self):
         super().__init__(args)
 
 
 class Test(TestBase):
-    def __init__(self, q):
-        super().__init__(q)
+    _iterations = 0
+
+    def __init__(self, instance, q, hosts=None):
+        super().__init__(instance, q, hosts)
 
     def send(self):
-        super().send()
+        ret = super().send()
+        log(self._iterations)
+        self._iterations += 1
+        return ret

@@ -16,15 +16,21 @@
 
 # Base class for benchmark tests.
 
+import time
+
 class PrepareBase:
     def __init__(self, params=None):
         pass
 
 
 class TestBase:
-    def __init__(self, q, hosts=None):
+    def __init__(self, instance, q, hosts=None):
+        _instance = instance
         _q = q
         _hosts = hosts
 
     def send(self, data=None):
         return 0
+
+    def log(self, message):
+        self._q.put([time.asctime(time.localtime(), self._instance])

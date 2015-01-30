@@ -20,6 +20,7 @@ import threading
 import sys
 import queue
 import csv
+import time
 
 # Benchmark phases
 # 1. prepare test, such as load initial data to randomize
@@ -27,35 +28,70 @@ import csv
 # 3. synchronize time
 # 4. start
 
-def worker(instance, test, scheduler_state, hosts):
+PAUSE_BEFORE_STARTING = 5
+SCHEDULE_BACKOFF = 5
+
+def worker(test, scheduler_state, rate, under_threshold,
+           over_threshold):
     while True:
-        pause()
+        pause(scheduler_state, rate)
 
         scheduler_state._started_lock.acquire()
         scheduler_state._started += 1
         scheduler_state._started_lock.release()
 
-        test.send()
+        start = time.time()
+        status = test.send()
+        finish = time.time()
+
+        duration = int(round((finish - start) * 1000000))
 
         scheduler_state._finished_lock.acquire()
         scheduler_state._finished += 1
+        scheduler_state._duration += duration
+        scheduler_state._statuses[status] += 1
+        if under_threshold is not None and duration < under_threshold:
+            scheduler_state._under_threshold += 1
+        if over_threshold is not None and duration > over_threshold:
+            scheduler_state.over_threshold += 1
         scheduler_state._finished_lock.release()
 
-def pause():
-    pass
+def pause(scheduler_state, rate):
+    scheduler_state._bucket_lock.acquire()
+    scheduler_state._bucket_entries += 1
+    if (scheduler_state._bucket_entries >= rate):
+        scheduler_state._bucket_second += 1
+        scheduler_state._bucket_entries = 0
+    scheduler_state._bucket_lock.release()
+
+    # Have we fallen behind?
+    now = time.time()
+    if scheduler_state._bucket_second <= now:
+        scheduler_state._bucket_second = now + SCHEDULE_BACKOFF
+    time.sleep(scheduler_state._bucket_second - now +\
+                   ((float(random.randint(0, 1000)))/1000 ))
+
 
 class SchedulerState:
     _started = 0
     _finished = 0
-    def __init__(self):
+    _duration = 0
+    _under_threshold = 0
+    _over_threshold = 0
+    _bucket_second = PAUSE_BEFORE_STARTING
+    _bucket_entries = 0
+
+    def __init__(self, statuses=1):
+        _status = [0] * statuses
         self._started_lock = threading.Lock()
         self._finished_lock = threading.Lock()
+        self._bucket_lock = threading.Lock()
 
-def logger(q, logfile):
-    outfile = open(logfile, 'a', 1)
+def logger(q, log_file):
+    outfile = open(log_file, 'a', 1, newline='')
+    outwriter = csv.writer(outfile, delimiter='\t', lineterminator='\n')
     while True:
-        msg = q.get()
-        outfile.write(str(msg) + '\n')
+        outwriter.writerow([q.get()])
 
 
 # main
@@ -67,20 +103,37 @@ args = argparser.parse_args()
 test = __import__(args.test)
 conf = __import__(args.conf)
 
-scheduler_state = SchedulerState()
+scheduler_state = SchedulerState(test.statuses)
 
 # prepare phase, have the params
 preparation = test.Prepare()
 q = queue.Queue()
 qt = threading.Thread(target=logger, args=(q,), daemon=True)
 
-for t in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(t, test.Test(q, conf.logfile),
-                                              scheduler_state, conf.hosts),
+for i in (range(1, conf.workers+1)):
+    w = threading.Thread(target=worker, args=(test.Test(i, q, conf.hosts),
+                                              scheduler_state, conf.rate,
+                                              conf.under_threshold,
+                                              conf.over_threshold),
                          daemon=True)
     w.start()
 
-outfile = open(conf.summaryfile, 'a', 1)
+outfile = open(conf.summary_file, 'a', 1, newline='')
+outwriter = csv.writer(outfile, delimiter='\t', lineterminator='\n')
+outwriter.writerow(['time', 'started', 'finished' 'in_flight',
+                    'duration', 'under_threshold', 'over_threshold',
+                    '|', '[ statuses... ]'])
 while True:
-    # write to csv sent, inflight, etc
-    pass
+    outwriter.writerow([])
+    started = scheduler_state._started
+    finished = scheduler_state._finished
+    outwriter.writerow([time.asctime(time.localtime()),
+                        started,
+                        finished,
+                        started-finished,
+                        scheduler_state._duration,
+                        scheduler_state._under_threshold,
+                        scheduler_state._over_threshold,
+                        '|',
+                        scheduler_state._statuses])
+    time.sleep(conf.summary_interval)

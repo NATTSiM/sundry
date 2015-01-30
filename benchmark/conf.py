@@ -1,4 +1,8 @@
 workers = 75
 hosts = []
-summaryfile = 'summary.log'
-logfile = 'out.log'
+summary_file = 'summary.log'
+log_file = 'out.log'
+under_threshold = None
+over_threshold = None
+summary_interval = 10
+rate = 10
