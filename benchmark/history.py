@@ -17,17 +17,18 @@
 # noop test for benchmark
 
 import testbase
+import random
 
 statuses = 1
 
 class Prepare(testbase.PrepareBase):
     def __init__(self, params=dict()):
         accounts_file = open('/tmp/accounts.txt', 'r')
-        accounts = set()
+        accounts = list()
         for line in accounts_file:
             l = line.strip()
             if len(l):
-                accounts.add(l)
+                accounts.append(l)
             params['accounts'] = accounts
 
 class Test(testbase.TestBase):
@@ -35,9 +36,12 @@ class Test(testbase.TestBase):
 
     def __init__(self, instance, q, hosts=None, params=None):
         super().__init__(instance, q, hosts, params)
+        self._accounts = params['accounts']
+        self._max_account = len(self._accounts)
 
     def send(self):
-        ret = super().send()
+        account = self._accounts[random.randint(0, self._max_account)]
+        print(account)
         self.log(self._iterations)
         self._iterations += 1
-        return ret
+        return 0
