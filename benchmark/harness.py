@@ -107,7 +107,8 @@ conf = __import__(args.conf)
 scheduler_state = SchedulerState(test.statuses)
 
 # prepare phase, have the params
-preparation = test.Prepare()
+params = dict()
+preparation = test.Prepare(params)
 q = queue.Queue()
 qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
 qt.start()
@@ -116,7 +117,8 @@ if conf.stack_size is not None:
     threading.stack_size(conf.stack_size * 1024)
 
 for i in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(test.Test(i, q, conf.hosts),
+    w = threading.Thread(target=worker, args=(test.Test(i, q, conf.hosts,
+                                                        params),
                                               scheduler_state, conf.rate,
                                               conf.under_threshold,
                                               conf.over_threshold),
@@ -142,4 +144,3 @@ while True:
                         '|',
                         scheduler_state._status])
     time.sleep(conf.summary_interval)
-

@@ -14,25 +14,30 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# Base class for benchmark tests.
+# noop test for benchmark
 
-import time
+import testbase
 
-class PrepareBase:
-    def __init__(self, params=None):
-        pass
+statuses = 1
 
+class Prepare(testbase.PrepareBase):
+    def __init__(self, params=dict()):
+        accounts_file = open('/tmp/accounts.txt', 'r')
+        accounts = set()
+        for line in accounts_file:
+            l = line.strip()
+            if len(l):
+                accounts.add(l)
+            params['accounts'] = accounts
 
-class TestBase:
+class Test(testbase.TestBase):
+    _iterations = 0
+
     def __init__(self, instance, q, hosts=None, params=None):
-        self._instance = instance
-        self._q = q
-        self._hosts = hosts
-        self._params = params
+        super().__init__(instance, q, hosts, params)
 
-    def send(self, data=None):
-        return 0
-
-    def log(self, message):
-        self._q.put([time.asctime(time.localtime()), self._instance, message])
-
+    def send(self):
+        ret = super().send()
+        self.log(self._iterations)
+        self._iterations += 1
+        return ret
