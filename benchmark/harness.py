@@ -32,7 +32,7 @@ import random
 PAUSE_BEFORE_STARTING = 5
 SCHEDULE_BACKOFF = 5
 
-def worker(test, scheduler_state, rate, under_threshold,
+def worker(test, q, instance, scheduler_state, rate, under_threshold,
            over_threshold):
     while True:
         pause(scheduler_state, rate)
@@ -42,7 +42,7 @@ def worker(test, scheduler_state, rate, under_threshold,
         scheduler_state._started_lock.release()
 
         start = time.time()
-        status = test.send()
+        results = test.send()
         finish = time.time()
 
         duration = int(round((finish - start) * 1000000))
@@ -50,12 +50,16 @@ def worker(test, scheduler_state, rate, under_threshold,
         scheduler_state._finished_lock.acquire()
         scheduler_state._finished += 1
         scheduler_state._duration += duration
-        scheduler_state._status[status] += 1
+        scheduler_state._status[results[0]] += 1
         if under_threshold is not None and duration < under_threshold:
             scheduler_state._under_threshold += 1
         if over_threshold is not None and duration > over_threshold:
             scheduler_state.over_threshold += 1
         scheduler_state._finished_lock.release()
+
+        q.put([time.asctime(time.localtime()), instance, duration, results[0],
+               results[1:]])
+
 
 def pause(scheduler_state, rate):
     scheduler_state._bucket_lock.acquire()
@@ -117,8 +121,8 @@ if conf.stack_size is not None:
     threading.stack_size(conf.stack_size * 1024)
 
 for i in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(test.Test(i, q, conf.hosts,
-                                                        params),
+    w = threading.Thread(target=worker, args=(test.Test(conf.hosts,
+                                                        params), q, i,
                                               scheduler_state, conf.rate,
                                               conf.under_threshold,
                                               conf.over_threshold),

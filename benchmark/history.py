@@ -34,14 +34,13 @@ class Prepare(testbase.PrepareBase):
 class Test(testbase.TestBase):
     _iterations = 0
 
-    def __init__(self, instance, q, hosts=None, params=None):
-        super().__init__(instance, q, hosts, params)
+    def __init__(self, hosts=None, params=None):
+        super().__init__(hosts, params)
         self._accounts = params['accounts']
-        self._max_account = len(self._accounts)
+        self._max_account = len(self._accounts) - 1
 
     def send(self):
         account = self._accounts[random.randint(0, self._max_account)]
-        print(account)
-        self.log(self._iterations)
+#        self.log(self._iterations)
         self._iterations += 1
-        return 0
+        return [0, account]

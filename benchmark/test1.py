@@ -28,8 +28,8 @@ class Prepare(testbase.PrepareBase):
 class Test(testbase.TestBase):
     _iterations = 0
 
-    def __init__(self, instance, q, hosts=None):
-        super().__init__(instance, q, hosts)
+    def __init__(self, hosts=None):
+        super().__init__(hosts)
 
     def send(self):
         ret = super().send()
