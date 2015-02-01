@@ -14,7 +14,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import ripplepy
 import argparse
 import threading
 import sys
@@ -31,8 +30,8 @@ import random
 
 SCHEDULE_BACKOFF = 1
 
-def worker(test, q, instance, workers, scheduler_state, rate, under_threshold,
-           over_threshold):
+def worker(test, q, instance, workers, hosts, scheduler_state,
+           under_threshold, over_threshold):
     scheduler_state._waiting_lock.acquire()
     scheduler_state._waiting += 1
     scheduler_state._waiting_lock.release()
@@ -42,6 +41,9 @@ def worker(test, q, instance, workers, scheduler_state, rate, under_threshold,
     if scheduler_state._start_second == 0:
         scheduler_state._start_second = int(time.time())
 
+    num_hosts = len(hosts)
+    rr = instance
+
     while True:
         scheduler_state.pause()
 
@@ -50,8 +52,9 @@ def worker(test, q, instance, workers, scheduler_state, rate, under_threshold,
         scheduler_state._started_lock.release()
 
         start = time.time()
-        results = test.send()
+        results = test.send(hosts[rr % num_hosts])
         finish = time.time()
+        rr += 1
 
         duration = int(round((finish - start) * 1000000))
 
@@ -132,7 +135,7 @@ conf = __import__(args.conf)
 scheduler_state = SchedulerState(conf.rate, conf.ramp, test.statuses)
 
 # prepare phase, have the params
-params = dict()
+params = conf.params
 preparation = test.Prepare(params)
 q = queue.Queue()
 qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
@@ -142,16 +145,19 @@ if conf.stack_size is not None:
     threading.stack_size(conf.stack_size * 1024)
 
 for i in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(test.Test(conf.hosts,
-                                                        params), q, i,
-                                              conf.workers,
-                                              scheduler_state, conf.rate,
+    w = threading.Thread(target=worker, args=(test.Test(params), q, i,
+                                              conf.workers, conf.hosts,
+                                              scheduler_state,
                                               conf.under_threshold,
                                               conf.over_threshold),
                          daemon=True)
     w.start()
 
 outfile = open(conf.summary_file, 'a', 1, newline='')
+outfile.write('Test \'' + args.test + '\' starting with config:\n')
+with open(conf.__file__) as f:
+    outfile.write(f.read())
+outfile.write((2 * '========================================') + '\n')
 outwriter = csv.writer(outfile, delimiter='\t', lineterminator='\n')
 outwriter.writerow(['time', 'started', 'finished' 'in_flight',
                     'duration', 'under_threshold', 'over_threshold',

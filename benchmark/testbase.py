@@ -24,9 +24,8 @@ class PrepareBase:
 
 
 class TestBase:
-    def __init__(self, hosts=None, params=None):
-        self._hosts = hosts
+    def __init__(self, params=None):
         self._params = params
 
-    def send(self, data=None):
-        return 0
+    def send(self, host):
+        return [0]

@@ -28,10 +28,10 @@ class Prepare(testbase.PrepareBase):
 class Test(testbase.TestBase):
     _iterations = 0
 
-    def __init__(self, hosts=None):
-        super().__init__(hosts)
+    def __init__(self):
+        super().__init__()
 
-    def send(self):
+    def send(self, host):
         ret = super().send()
         self.log(self._iterations)
         self._iterations += 1
