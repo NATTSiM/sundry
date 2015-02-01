@@ -45,8 +45,6 @@ class Test(testbase.TestBase):
     def send(self, host):
         account = self._accounts[random.randint(0, self._max_account)]
         parsed_url = urllib.parse.urlparse(host)
-        conn = None
-        err = None
 
         try:
             if parsed_url.scheme == 'https':

@@ -66,7 +66,7 @@ def worker(test, q, instance, workers, hosts, scheduler_state,
         if under_threshold is not None and duration < under_threshold:
             scheduler_state._under_threshold += 1
         if over_threshold is not None and duration > over_threshold:
-            scheduler_state.over_threshold += 1
+            scheduler_state._over_threshold += 1
         scheduler_state._finished_lock.release()
 
         q.put([time.asctime(time.localtime()), instance, duration, results[0],
