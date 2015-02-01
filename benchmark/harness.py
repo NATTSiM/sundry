@@ -163,7 +163,6 @@ outwriter.writerow(['time', 'started', 'finished' 'in_flight',
                     'duration', 'under_threshold', 'over_threshold',
                     '|', '[ statuses... ]'])
 while True:
-    outwriter.writerow([])
     started = scheduler_state._started
     finished = scheduler_state._finished
     outwriter.writerow([time.asctime(time.localtime()),
