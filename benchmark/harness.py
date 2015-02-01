@@ -21,6 +21,7 @@ import queue
 import csv
 import time
 import random
+import os
 
 # Benchmark phases
 # 1. prepare test, such as load initial data to randomize
@@ -132,6 +133,7 @@ args = argparser.parse_args()
 test = __import__(args.test)
 conf = __import__(args.conf)
 
+random.seed(os.urandom(32))
 scheduler_state = SchedulerState(conf.rate, conf.ramp, test.statuses)
 
 # prepare phase, have the params
