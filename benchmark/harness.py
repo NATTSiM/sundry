@@ -143,9 +143,6 @@ q = queue.Queue()
 qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
 qt.start()
 
-if conf.stack_size is not None:
-    threading.stack_size(conf.stack_size * 1024)
-
 for i in (range(1, conf.workers+1)):
     w = threading.Thread(target=worker, args=(test.Test(params), q, i,
                                               conf.workers, conf.hosts,

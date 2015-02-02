@@ -1,12 +1,10 @@
-workers = 5000
+workers = 1500
 summary_file = 'summary.log'
 log_file = 'out.log'
 under_threshold = None
 over_threshold = None
 summary_interval = 10
 rate = 5
-# thread stack size in KB
-stack_size = 128
 # ramp up time in seconds
 ramp = 1
 hosts = [
