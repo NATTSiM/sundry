@@ -16,7 +16,7 @@ if len(sys.argv)==2:
 if interval <= 0:
     interval=10
     
-os.chdir("/usr/local/rippled/etc")
+os.chdir("/etc/rippled")
 devnull=open(os.devnull, "w")
 
 hostname=socket.gethostname()
@@ -31,7 +31,7 @@ while 1:
     output.append(str(int(nowsecond)))
     output.append(hostname)
     try:
-        res=subprocess.check_output(["../sbin/rippled", "server_info"],
+        res=subprocess.check_output(["/usr/sbin/rippled", "server_info"],
             stderr=devnull)
         output.append("ok")
         j=json.loads(res)
