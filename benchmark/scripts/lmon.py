@@ -29,7 +29,7 @@
 # <lmon.py> -l /tmp/foo.log -s https://s1.ripple.com:51234 --current
 #
 # Summarize all existing validated ledgers, then stop:
-# <lmon.py> -l /tmp/foo.log -s https://s1.ripple.com:51234
+# <lmon.py> -l /tmp/foo.log -s https://s1.ripple.com:51234 -x
 #
 # Note: validated logic assumes a single server being connected to, not
 # round-robbined. validated flag in ledger should be fixed.
