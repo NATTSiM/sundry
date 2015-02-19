@@ -20,11 +20,12 @@
 import ripplepy
 import argparse
 import json
-import sys
+import time
 
 FUNDER = 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh'
 SECRET = 'masterpassphrase'
 DROPS = 1000000
+PAUSE = 0.25
 
 cfg = {
     'currency': 'BUX',
@@ -94,5 +95,6 @@ for i in range(1, cfg['accounts']+1):
          account['master_seed'])
     fund(args.server, gateway, account['account_id'], amount, gateway_seed)
     res['accounts'].append(account)
+    time.sleep(PAUSE)
 
 json.dump(res, outfile)
