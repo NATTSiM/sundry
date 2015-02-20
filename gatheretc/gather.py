@@ -16,13 +16,12 @@ if len(sys.argv)==2:
 if interval <= 0:
     interval=10
     
-os.chdir("/etc/rippled")
 devnull=open(os.devnull, "w")
 
 hostname=socket.gethostname()
 
 print '\t'.join(["datetime", "epochtime", "hostname", "queryresult",
-    "server_state", "age", "peers", "load_factor", "complete_ledgers"])
+    "server_state", "age", "peers", "proposers", "load_factor", "complete_ledgers"])
 
 while 1:
     output=[]
@@ -31,8 +30,7 @@ while 1:
     output.append(str(int(nowsecond)))
     output.append(hostname)
     try:
-        res=subprocess.check_output(["/usr/sbin/rippled", "server_info"],
-            stderr=devnull)
+        res=subprocess.check_output(["/usr/sbin/rippled", "--conf", "/etc/rippled/rippled.cfg", "server_info"], stderr=devnull)
         output.append("ok")
         j=json.loads(res)
 
@@ -46,6 +44,10 @@ while 1:
             output.append("-")
         try:
             output.append(str(j["result"]["info"]["peers"]))
+        except:
+            output.append("-")
+        try:
+            output.append(str(j["result"]["info"]["last_close"]["proposers"]))
         except:
             output.append("-")
         try:
