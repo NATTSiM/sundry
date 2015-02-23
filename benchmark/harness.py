@@ -144,7 +144,7 @@ qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
 qt.start()
 
 for i in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(test.Test(params), q, i,
+    w = threading.Thread(target=worker, args=(test.Test(params, conf, i), q, i,
                                               conf.workers, conf.hosts,
                                               scheduler_state,
                                               conf.under_threshold,
