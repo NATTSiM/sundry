@@ -16,8 +16,6 @@
 
 import argparse
 import threading
-import sys
-import queue
 import csv
 import time
 import random
@@ -31,7 +29,7 @@ import os
 
 SCHEDULE_BACKOFF = 1
 
-def worker(test, q, instance, workers, hosts, scheduler_state,
+def worker(test, logger, instance, workers, hosts, scheduler_state,
            under_threshold, over_threshold):
     scheduler_state._waiting_lock.acquire()
     scheduler_state._waiting += 1
@@ -69,7 +67,7 @@ def worker(test, q, instance, workers, hosts, scheduler_state,
             scheduler_state._over_threshold += 1
         scheduler_state._finished_lock.release()
 
-        q.put([time.asctime(time.localtime()), instance, duration, results[0],
+        logger.log([time.asctime(time.localtime()), instance, duration, results[0],
                results[1:]])
 
 
@@ -117,11 +115,17 @@ class SchedulerState:
                        ((float(random.randint(0, 1000)))/1000 ))
 
 
-def logger(q, log_file):
-    outfile = open(log_file, 'a', 1, newline='')
-    outwriter = csv.writer(outfile, delimiter='\t', lineterminator='\n')
-    while True:
-        outwriter.writerow(q.get())
+class Logger:
+    def __init__(self, log_file):
+        self._lock = threading.Lock()
+        self._outfile = open(log_file, 'a', 1, newline='')
+        self._outwriter = csv.writer(self._outfile, delimiter='\t',
+                                       lineterminator='\n')
+
+    def log(self, entry):
+        self._lock.acquire()
+        self._outwriter.writerow(entry)
+        self._lock.release()
 
 
 # main
@@ -139,12 +143,12 @@ scheduler_state = SchedulerState(conf.rate, conf.ramp, test.statuses)
 # prepare phase, have the params
 params = conf.params
 preparation = test.Prepare(params)
-q = queue.Queue()
-qt = threading.Thread(target=logger, args=(q, conf.log_file), daemon=True)
-qt.start()
+
+logger = Logger(conf.log_file)
 
 for i in (range(1, conf.workers+1)):
-    w = threading.Thread(target=worker, args=(test.Test(params, conf, i), q, i,
+    w = threading.Thread(target=worker, args=(test.Test(params, conf, i),
+                                              logger, i,
                                               conf.workers, conf.hosts,
                                               scheduler_state,
                                               conf.under_threshold,
