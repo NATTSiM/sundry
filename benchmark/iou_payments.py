@@ -36,9 +36,12 @@ class Test(testbase.TestBase):
     def __init__(self, params=None, conf=None, instance=None):
         super().__init__(params, conf, instance)
         self._timeout = params['timeout']
-        self._client = ripplepy.RippleClient(
-            params['hosts'][instance % len(self._params['hosts'])],
-            timeout=self._timeout)
+        self._server = params['hosts'][instance % len(self._params['hosts'])]
+        self._client = ripplepy.RippleClient(self._server,
+                timeout=self._timeout)
+#        self._client = ripplepy.RippleClient(
+#            params['hosts'][instance % len(self._params['hosts'])],
+#            timeout=self._timeout)
         self._accounts = list()
         for i in range(len(self._params['accounts']['accounts'])):
             if instance == (i % conf.workers) + 1:
@@ -58,6 +61,7 @@ class Test(testbase.TestBase):
 
 
     def send(self, host=None):
+        self._client.disconnect()
         sender = self._accounts[random.randint(0, self._max_account)]
         sender_id = sender['account_id']
         sender_seed = sender['master_seed']
@@ -72,19 +76,19 @@ class Test(testbase.TestBase):
         try:
             self._trans['Sequence'] = ripplepy.Cmd(client=self._client).account_info(sender_id)['result']['account_data']['Sequence']
         except ripplepy.RippleException:
-            return [1, sender_id, recipient_id, sys.exc_info()[1]]
+            return [1, sender_id, recipient_id, self._server, sys.exc_info()[1]]
         except Exception:
             self._client.disconnect()
-            return [2, sender_id, recipient_id, sys.exc_info()[1]]
+            return [2, sender_id, recipient_id, self._server, sys.exc_info()[1]]
 
         transaction = {'tx_json': self._trans, 'secret': sender_seed}
         tx_blob = ripplepy.ripple_serdes.ripple_json(json.dumps(transaction).encode())
 
         try:
             results = ripplepy.Cmd(client=self._client).submit(tx_blob)
-            return [0, sender_id, recipient_id, results['result']['tx_json']['hash']]
+            return [0, sender_id, recipient_id, self._server, results['result']['tx_json']['hash']]
         except ripplepy.RippleException:
-            return [3, sender_id, recipient_id, sys.exc_info()[1]]
+            return [3, sender_id, recipient_id, self._server, sys.exc_info()[1]]
         except Exception:
             self._client.disconnect()
-            return [4, sender_id, recipient_id, sys.exc_info()[1]]
+            return [4, sender_id, recipient_id, self._server, sys.exc_info()[1]]
