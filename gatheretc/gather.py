@@ -7,62 +7,76 @@ import time
 import datetime
 import sys
 import socket
+import csv
+import argparse
 
-interval=0
+argparser = argparse.ArgumentParser()
+argparser.add_argument('-r', '--rippled', type=str,
+    default='/usr/sbin/rippled')
+argparser.add_argument('-c', '--conf', type=str,
+    default='/etc/rippled/rippled.cfg')
+argparser.add_argument('-i', '--interval', type=int, default=10)
+argparser.add_argument('-o', '--outfile', type=str,
+    default=os.path.join(os.path.dirname(sys.argv[0]), 'server_info.out'))
+args = argparser.parse_args()
 
-if len(sys.argv)==2:
-    interval=int(sys.argv[1])
-
-if interval <= 0:
-    interval=10
-    
-devnull=open(os.devnull, "w")
+devnull = open(os.devnull, 'w')
+outfile = open(args.outfile, 'a')
 
 hostname=socket.gethostname()
+csv_writer = csv.writer(sys.stdout, delimiter='\t', lineterminator='\n')
 
-print '\t'.join(["datetime", "epochtime", "hostname", "queryresult",
-    "server_state", "age", "peers", "proposers", "load_factor", "complete_ledgers"])
+csv_writer.writerow(['datetime', 'epochtime', 'hostname', 'queryresult',
+    'server_state', 'age', 'peers', 'proposers', 'load_factor',
+    'complete_ledgers'])
 
 while 1:
-    output=[]
-    nowsecond=time.time()
+    output = []
+    nowsecond = time.time()
     output.append(time.asctime(time.localtime(nowsecond)))
     output.append(str(int(nowsecond)))
     output.append(hostname)
-    try:
-        res=subprocess.check_output(["/usr/sbin/rippled", "--conf", "/etc/rippled/rippled.cfg", "server_info"], stderr=devnull)
-        output.append("ok")
-        j=json.loads(res)
 
-        try:
-            output.append(j["result"]["info"]["server_state"])
-        except:
-            output.append("-")
-        try:
-            output.append(str(j["result"]["info"]["validated_ledger"]["age"]))
-        except:
-            output.append("-")
-        try:
-            output.append(str(j["result"]["info"]["peers"]))
-        except:
-            output.append("-")
-        try:
-            output.append(str(j["result"]["info"]["last_close"]["proposers"]))
-        except:
-            output.append("-")
-        try:
-            output.append(str(j["result"]["info"]["load_factor"]))
-        except:
-            output.append("-")
-        try:
+    res = ''
+    try:
+        res = subprocess.check_output([args.rippled, '--conf', args.conf,
+            'server_info'], stderr=devnull)
+        output.append('ok')
+        j = json.loads(res)
+
+        if 'server_state' in j['result']['info']:
+            output.append(j['result']['info']['server_state'])
+        else:
+            output.append('-')
+        if 'age' in j['result']['info']['validated_ledger']:
+            output.append(str(j['result']['info']['validated_ledger']['age']))
+        else:
+            output.append('-')
+        if 'peers' in j['result']['info']:
+            output.append(str(j['result']['info']['peers']))
+        else:
+            output.append('-')
+        if 'proposers' in j['result']['info']['last_close']:
+            output.append(str(j['result']['info']['last_close']['proposers']))
+        else:
+            output.append('-')
+        if 'load_factor' in j['result']['info']:
+            output.append(str(j['result']['info']['load_factor']))
+        else:
+            output.append('-')
+        if 'complete_ledgers' in j['result']['info']:
             output.append(str(j["result"]["info"]["complete_ledgers"]))
-        except:
-            output.append("-")
+        else:
+            output.append('-')
  
     except:
-        output.append("nok")
+        output.append('nok')
 
-    print '\t'.join(output)
+    csv_writer.writerow(output)
     sys.stdout.flush()
-    time.sleep(interval)
+
+    outfile.write(time.asctime(time.localtime(nowsecond)) + '\n' + res +
+        '\n----------------------------\n')
+    outfile.flush()
+    time.sleep(args.interval)
 
