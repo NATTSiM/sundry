@@ -16,12 +16,13 @@ argparser.add_argument('-r', '--rippled', type=str,
 argparser.add_argument('-c', '--conf', type=str,
     default='/etc/rippled/rippled.cfg')
 argparser.add_argument('-i', '--interval', type=int, default=10)
-argparser.add_argument('-o', '--outfile', type=str,
-    default=os.path.join(os.path.dirname(sys.argv[0]), 'server_info.out'))
+argparser.add_argument('-o', '--outfile', type=str)
 args = argparser.parse_args()
 
 devnull = open(os.devnull, 'w')
-outfile = open(args.outfile, 'a')
+outfile = None
+if args.outfile is not None:
+    outfile = open(args.outfile, 'a')
 
 hostname=socket.gethostname()
 csv_writer = csv.writer(sys.stdout, delimiter='\t', lineterminator='\n')
@@ -75,8 +76,9 @@ while 1:
     csv_writer.writerow(output)
     sys.stdout.flush()
 
-    outfile.write(time.asctime(time.localtime(nowsecond)) + '\n' + res +
-        '\n----------------------------\n')
-    outfile.flush()
-    time.sleep(args.interval)
+    if outfile is not None:
+        outfile.write(time.asctime(time.localtime(nowsecond)) + '\n' + res +
+            '\n----------------------------\n')
+        outfile.flush()
 
+    time.sleep(args.interval)
