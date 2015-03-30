@@ -19,7 +19,7 @@
 
 import ripplepy
 import argparse
-import json
+import ujson as json
 import time
 
 FUNDER = 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh'

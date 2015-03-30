@@ -19,7 +19,7 @@
 import testbase
 import random
 import sys
-import json
+import ujson as json
 import ripplepy
 
 statuses = 5
