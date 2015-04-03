@@ -37,6 +37,10 @@ def worker(test, logger, instance, workers, hosts, scheduler_state,
     # Faster than condition notify(a zillion).
     while scheduler_state._waiting < workers:
         time.sleep(1)
+
+    if len(test._accounts) == 0:
+        return
+
     if scheduler_state._start_second == 0:
         scheduler_state._start_second = int(time.time())
 

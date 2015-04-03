@@ -39,13 +39,23 @@ class Test(testbase.TestBase):
         self._server = params['hosts'][instance % len(self._params['hosts'])]
         self._client = ripplepy.RippleClient(self._server,
                 timeout=self._timeout)
-#        self._client = ripplepy.RippleClient(
-#            params['hosts'][instance % len(self._params['hosts'])],
-#            timeout=self._timeout)
         self._accounts = list()
-        for i in range(len(self._params['accounts']['accounts'])):
+
+        pos = 0
+        size = 0
+        for i in range(params['clients']):
+            size = int(len(params['accounts']['accounts']) / params['clients'])
+            if params['instance'] < len(params['accounts']['accounts']) %\
+                    params['clients']:
+                size += 1
+            if i == params['instance']:
+                break
+            pos += size
+
+        for i in range(pos, pos + size):
             if instance == (i % conf.workers) + 1:
                 self._accounts.append(self._params['accounts']['accounts'][i])
+
         self._max_account = len(self._accounts) - 1
         self._max_total_account = len(self._params['accounts']['accounts']) - 1
         self._trans = {
