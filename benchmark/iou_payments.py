@@ -83,20 +83,26 @@ class Test(testbase.TestBase):
         self._trans['Account'] = sender_id
         self._trans['Destination'] = recipient_id
 
+        account_info = None
         try:
-            self._trans['Sequence'] = ripplepy.Cmd(client=self._client).account_info(sender_id)['result']['account_data']['Sequence']
+            account_info = ripplepy.Cmd(client=self._client).account_info(sender_id)['result']
         except ripplepy.RippleException:
             return [1, sender_id, recipient_id, self._server, sys.exc_info()[1]]
         except Exception:
             self._client.disconnect()
             return [2, sender_id, recipient_id, self._server, sys.exc_info()[1]]
 
+        self._trans['Sequence'] = account_info['account_data']['Sequence']
         transaction = {'tx_json': self._trans, 'secret': sender_seed}
         tx_blob = ripplepy.ripple_serdes.ripple_json(json.dumps(transaction).encode())
 
         try:
             results = ripplepy.Cmd(client=self._client).submit(tx_blob)
-            return [0, sender_id, recipient_id, self._server, results['result']['tx_json']['hash']]
+            return [0, sender_id, recipient_id, self._server,
+                    results['result']['tx_json']['hash'],
+                    self._trans['Sequence'],
+                    account_info['ledger_current_index'],
+                    account_info['account_data']['PreviousTxnLgrSeq']]
         except ripplepy.RippleException:
             return [3, sender_id, recipient_id, self._server, sys.exc_info()[1]]
         except Exception:
