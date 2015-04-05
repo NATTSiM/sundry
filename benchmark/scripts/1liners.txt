@@ -1,0 +1,2 @@
+count transactions in a minute:
+grep '2015-Sun-05 06:58' ~/res/04052015/lmon.out | awk '{ SUM += $4 } END { print SUM }'
