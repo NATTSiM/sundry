@@ -94,7 +94,7 @@ class Test(testbase.TestBase):
 
         self._trans['Sequence'] = account_info['account_data']['Sequence']
         transaction = {'tx_json': self._trans, 'secret': sender_seed}
-        tx_blob = ripplepy.ripple_serdes.ripple_json(json.dumps(transaction).encode())
+        tx_blob = ripplepy.ripple_serdes.ripple_sign(json.dumps(transaction).encode())
 
         try:
             results = ripplepy.Cmd(client=self._client).submit(tx_blob)
