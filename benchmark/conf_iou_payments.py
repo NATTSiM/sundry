@@ -11,7 +11,7 @@ ramp = 60
 hosts = [ None ]
 params = {'accounts_file': '/home/mtravis/res/fundaccounts.json',
           'timeout': 10,
-          'clients': 5,
+          'clients': 1,
           'instance': 0,
           'hosts': [
               'http://nyc-bm6-private:51234',
