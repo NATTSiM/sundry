@@ -47,7 +47,7 @@ def fund(server, sender, recipient, amount, secret):
     }
     tx_json['Sequence'] = ripplepy.Cmd(server).account_info(sender)['result']['account_data']['Sequence']
     transaction = {'tx_json': tx_json, 'secret': secret}
-    print(ripplepy.Cmd(server).submit(ripplepy.ripple_serdes.ripple_json(json.dumps(transaction).encode())))
+    print(ripplepy.Cmd(server).submit(ripplepy.ripple_serdes.ripple_sign(json.dumps(transaction).encode())))
 
 def trust(server, limit, gateway, sender, secret):
     limitAmount = {
@@ -64,7 +64,7 @@ def trust(server, limit, gateway, sender, secret):
     tx_json['LimitAmount'] = limitAmount
     tx_json['Sequence'] = ripplepy.Cmd(server).account_info(sender)['result']['account_data']['Sequence']
     transaction = {'tx_json': tx_json, 'secret': secret}
-    print(ripplepy.Cmd(server).submit(ripplepy.ripple_serdes.ripple_json(json.dumps(transaction).encode())))
+    print(ripplepy.Cmd(server).submit(ripplepy.ripple_serdes.ripple_sign(json.dumps(transaction).encode())))
 
 # main
 argparser = argparse.ArgumentParser()
