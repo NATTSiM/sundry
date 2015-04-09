@@ -83,7 +83,7 @@ int main (int argc, char** argv)
 
                 do
                 {
-                    w = write (STDOUT_FILENO, (char*)buf + pos, s - pos);
+                    w = write (STDOUT_FILENO, (char*)outBuf + pos, s - pos);
                     if (w > -1)
                     {
                         pos += w;
