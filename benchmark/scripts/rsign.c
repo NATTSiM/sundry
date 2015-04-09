@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <stddef.h>
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
@@ -43,11 +44,11 @@ int main (int argc, char** argv)
 
     while (1)
     {
-        size_t bufSize, docSize;
+        uint32_t bufSize, docSize;
         char* buf;
 
         readStdin (&bufSize, sizeof (bufSize));
-        docSize = be64toh (bufSize);
+        docSize = be32toh (bufSize);
 
         if (docSize)
         {
@@ -57,7 +58,7 @@ int main (int argc, char** argv)
             buf = malloc (docSize);
             if (buf == NULL)
             {
-                fprintf (stderr, "Can't allocate %lu bytes.\n", docSize);
+                fprintf (stderr, "Can't allocate %u bytes.\n", docSize);
                 exit (1);
             }
             readStdin (buf, docSize);
@@ -65,15 +66,16 @@ int main (int argc, char** argv)
             if (signedLen)
             {
                 char *outBuf;
-                size_t signedBufSize, s, w;
-                size_t pos = 0;
+                uint32_t signedBufSize, s;
+                ssize_t w;
+                uint32_t pos = 0;
 
-                signedBufSize = htobe64 (signedLen);
+                signedBufSize = htobe32 ((uint32_t)signedLen);
                 s = sizeof (signedBufSize) + signedLen;
                 outBuf = malloc (s);
                 if (outBuf == NULL)
                 {
-                    fprintf (stderr, "Can't allocate %lu bytes.\n", s);
+                    fprintf (stderr, "Can't allocate %u bytes.\n", s);
                     exit (2);
                 }
                 memcpy (outBuf, &signedBufSize, sizeof (signedBufSize));
