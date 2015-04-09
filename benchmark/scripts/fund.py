@@ -26,6 +26,7 @@ FUNDER = 'rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh'
 SECRET = 'masterpassphrase'
 DROPS = 1000000
 PAUSE = 0.25
+FEE = '1000000'
 
 cfg = {
     'currency': 'BUX',
@@ -43,11 +44,12 @@ def fund(server, sender, recipient, amount, secret):
         'Account': sender,
         'Amount': amount,
         'Destination': recipient,
-        'Fee': '1000000',
+        'Fee': FEE,
     }
     tx_json['Sequence'] = ripplepy.Cmd(server).account_info(sender)['result']['account_data']['Sequence']
     transaction = {'tx_json': tx_json, 'secret': secret}
     print(ripplepy.Cmd(server).submit(ripplepy.ripple_serdes.ripple_sign(json.dumps(transaction).encode())))
+
 
 def trust(server, limit, gateway, sender, secret):
     limitAmount = {
@@ -59,7 +61,7 @@ def trust(server, limit, gateway, sender, secret):
         'Flags': 131072,
         'TransactionType': 'TrustSet',
         'Account': sender,
-        'Fee': '1000000'
+        'Fee': FEE
     }
     tx_json['LimitAmount'] = limitAmount
     tx_json['Sequence'] = ripplepy.Cmd(server).account_info(sender)['result']['account_data']['Sequence']

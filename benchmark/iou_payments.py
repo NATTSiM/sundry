@@ -21,6 +21,8 @@ import random
 import sys
 import ujson as json
 import ripplepy
+import subprocess
+import struct
 
 statuses = 5
 
@@ -69,6 +71,9 @@ class Test(testbase.TestBase):
             }
         }
 
+        self._rsign = subprocess.Popen([params['rsign']], stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE, bufsize=0)
+
 
     def send(self, host=None):
         self._client.disconnect()
@@ -94,7 +99,7 @@ class Test(testbase.TestBase):
 
         self._trans['Sequence'] = account_info['account_data']['Sequence']
         transaction = {'tx_json': self._trans, 'secret': sender_seed}
-        tx_blob = ripplepy.ripple_serdes.ripple_sign(json.dumps(transaction).encode())
+        tx_blob = self.sign(transaction)
 
         try:
             results = ripplepy.Cmd(client=self._client).submit(tx_blob)
@@ -108,3 +113,11 @@ class Test(testbase.TestBase):
         except Exception:
             self._client.disconnect()
             return [4, sender_id, recipient_id, self._server, sys.exc_info()[1]]
+
+    def sign(self, transaction):
+        js = json.dumps(transaction).encode()
+        self._rsign.stdin.write(struct.pack('! I', len(js)) +
+                                bytes(js, 'utf-8'))
+        bufsize = struct.unpack('! I', self._rsign.stdout.read(4))[0]
+        return struct.unpack(str(bufsize) + 's',
+                             self._rsign.stdout.read(bufsize))

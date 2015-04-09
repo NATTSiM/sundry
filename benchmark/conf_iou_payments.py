@@ -13,6 +13,7 @@ params = {'accounts_file': '/home/mtravis/res/fundaccounts.json',
           'timeout': 10,
           'clients': 1,
           'instance': 0,
+          'rsign': './scripts/rsign',
           'hosts': [
               'http://nyc-bm6-private:51234',
 #              'http://nyc-bm6-private:52234',
