@@ -120,7 +120,7 @@ void readStdin (void* buf, size_t count)
                 perror (NULL);
                 exit (4);
             case 0:
-                exit (5);
+                exit (0);
             default:
                 pos += r;
         }
