@@ -1,6 +1,6 @@
 workers = 1500
-summary_file = '/home/mtravis/res/summary.log'
-log_file = '/home/mtravis/res/out.log'
+summary_file = '/home/mtravis/res/mmddyyyy/summary-x-y.log'
+log_file = '/home/mtravis/res/mmddyyyy/detail-x-y.log'
 under_threshold = None
 over_threshold = None
 summary_interval = 10
