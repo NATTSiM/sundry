@@ -116,8 +116,7 @@ class Test(testbase.TestBase):
 
     def sign(self, transaction):
         js = json.dumps(transaction).encode()
-        self._rsign.stdin.write(struct.pack('! I', len(js)) +
-                                bytes(js, 'utf-8'))
+        self._rsign.stdin.write(struct.pack('! I', len(js)) + js)
         bufsize = struct.unpack('! I', self._rsign.stdout.read(4))[0]
         return struct.unpack(str(bufsize) + 's',
-                             self._rsign.stdout.read(bufsize))
+                             self._rsign.stdout.read(bufsize))[0]
