@@ -26,8 +26,10 @@ while 1:
         outfiles[report] = \
             open(basedir + "/var/run/" + report + ".new", "w+", -1)
         if reports[report] == None:
-            procs[report] = subprocess.Popen(["/usr/sbin/rippled", "-q", report],
-                stdout = outfiles[report], stderr = devnull)
+            try:
+                procs[report] = subprocess.Popen(["/usr/sbin/rippled", "-q", report], stdout = outfiles[report], stderr = devnull)
+            except:
+                continue
         else:
             procs[report] = subprocess.Popen(["/usr/sbin/rippled", "-q", report,
               reports[report]], stdout = outfiles[report], stderr = devnull)
