@@ -37,9 +37,11 @@ for line in tailer.follow(open(filename)):
       peers = 0
       load_factor = 0
       complete_ledgers = 0
-    else:
+    elif len(row) == 10:
       timestamp, epoch, hostname, queryresult, server_state, age, peers, \
       proposers, load_factor, complete_ledgers = row
+    else:
+      continue
     timestamp = dateutil.parser.parse(timestamp)
     try:
       epoch = int(epoch)
