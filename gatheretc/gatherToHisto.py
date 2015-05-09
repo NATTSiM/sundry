@@ -6,7 +6,7 @@ import numpy as np
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('-g', '--gather', type=str,
-    default='/var/log/gather.out')
+    default='/var/log/rippled/gather.out')
 args = argparser.parse_args()
 
 def checkPath(path):
@@ -41,8 +41,8 @@ histogram = np.histogram(ledgerAge, bins=[0,25,60,100000])
 binOut = histogram[0]
 
 print
-print str(100.0*(float(binOut[0])/samples)) + "% ledger age < 20 seconds"
-print str(100.0*(float(binOut[1])/samples)) + "% 20 seconds < ledger age < 60 seconds"
+print str(100.0*(float(binOut[0])/samples)) + "% ledger age < 25 seconds"
+print str(100.0*(float(binOut[1])/samples)) + "% 25 seconds < ledger age < 60 seconds"
 print str(100.0*(float(binOut[2])/samples)) + "% ledger age > 60 seconds\n"
 
 
